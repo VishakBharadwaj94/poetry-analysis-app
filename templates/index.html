@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poetry Analysis App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px 0;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.2em;
+            font-style: italic;
+        }
+        
+        .main-content {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+        
+        .full-width {
+            width: 100%;
+            max-width: 800px;
+        }
+        
+        .section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .section:hover {
+            transform: translateY(-5px);
+        }
+        
+        .section h2 {
+            color: #34495e;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .or-divider {
+            text-align: center;
+            margin: 30px 0;
+            position: relative;
+        }
+        
+        .or-divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #bdc3c7;
+        }
+        
+        .or-divider span {
+            background: white;
+            padding: 0 20px;
+            color: #7f8c8d;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        
+        .poem-type-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 15px;
+        }
+        
+        .btn:hover {
+            background: linear-gradient(135deg, #2980b9, #1f618d);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-small {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-small:hover {
+            background: linear-gradient(135deg, #8e44ad, #7d3c98);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(155, 89, 182, 0.3);
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            font-family: 'Georgia', serif;
+            font-size: 1em;
+            line-height: 1.5;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.2);
+        }
+        
+        .result {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            margin-top: 20px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .result h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+            padding: 40px;
+        }
+        
+        .error {
+            color: #e74c3c;
+            background: #ffeaea;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .poem-text {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            font-style: italic;
+            line-height: 1.8;
+            margin-bottom: 20px;
+            white-space: pre-line;
+        }
+        
+        .analysis-text {
+            line-height: 1.7;
+        }
+        
+        .analysis-text h2 {
+            color: #2c3e50;
+            font-size: 1.2em;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ecf0f1;
+            padding-bottom: 5px;
+        }
+        
+        .analysis-text h3 {
+            color: #34495e;
+            font-size: 1.1em;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .analysis-text strong {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .analysis-text em {
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        
+        .analysis-text p {
+            margin-bottom: 15px;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .poem-type-buttons {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Poetry Analysis Studio</h1>
+            <p class="subtitle">Discover and analyze the beauty of poetry</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="section full-width">
+                <h2>🔍 Analyze Your Poem</h2>
+                <p>Submit your own poem for detailed literary analysis:</p>
+                <textarea id="userPoem" placeholder="Paste your poem here..."></textarea>
+                <button class="btn" onclick="analyzePoem()">Analyze Poem</button>
+                
+                <div class="or-divider">
+                    <span>OR</span>
+                </div>
+                
+                <h3>Generate & Explain Example Poems</h3>
+                <p>Choose a poem type to see an example with analysis:</p>
+                <div class="poem-type-buttons">
+                    <button class="btn-small" onclick="generatePoem('haiku')">Haiku</button>
+                    <button class="btn-small" onclick="generatePoem('sonnet')">Sonnet</button>
+                    <button class="btn-small" onclick="generatePoem('limerick')">Limerick</button>
+                    <button class="btn-small" onclick="generatePoem('free_verse')">Free Verse</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function showLoading(message) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `
+                <div class="result">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        ${message}
+                    </div>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `
+                <div class="result">
+                    <div class="error">Error: ${message}</div>
+                </div>
+            `;
+        }
+
+        async function generatePoem(type) {
+            console.log('Generate poem clicked:', type);
+            
+            const displayType = type.replace('_', ' ').toUpperCase();
+            showLoading(`Generating a ${type.replace('_', ' ')} with analysis...`);
+            
+            try {
+                console.log('Making request to /generate_example');
+                const response = await fetch('/generate_example', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ type: type })
+                });
+                
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                if (data.success) {
+                    const content = data.content;
+                    const parts = content.split('ANALYSIS:');
+                    const poemPart = parts[0].replace('POEM:', '').trim();
+                    const analysisPart = parts[1] ? parts[1].trim() : '';
+                    
+                    const resultDiv = document.getElementById('result');
+                    resultDiv.innerHTML = `
+                        <div class="result">
+                            <h3>Example ${displayType}</h3>
+                            <div class="poem-text">${poemPart}</div>
+                            ${analysisPart ? `
+                                <h3>Literary Analysis</h3>
+                                <div class="analysis-text">${analysisPart}</div>
+                            ` : ''}
+                        </div>
+                    `;
+                } else {
+                    showError(data.error || 'Unknown error occurred');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError(error.message);
+            }
+        }
+        
+        async function analyzePoem() {
+            console.log('Analyze poem clicked');
+            
+            const poem = document.getElementById('userPoem').value.trim();
+            
+            if (!poem) {
+                showError('Please enter a poem to analyze.');
+                return;
+            }
+            
+            showLoading('Analyzing your poem...');
+            
+            try {
+                console.log('Making request to /analyze_poem');
+                const response = await fetch('/analyze_poem', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ poem: poem })
+                });
+                
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                if (data.success) {
+                    const resultDiv = document.getElementById('result');
+                    resultDiv.innerHTML = `
+                        <div class="result">
+                            <h3>Your Poem</h3>
+                            <div class="poem-text">${poem}</div>
+                            <h3>Literary Analysis</h3>
+                            <div class="analysis-text">${data.analysis}</div>
+                        </div>
+                    `;
+                    // Scroll to results smoothly
+                    resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } else {
+                    showError(data.error || 'Unknown error occurred');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError(error.message);
+            }
+        }
+
+        // Test function to verify JavaScript is working
+        function testClick() {
+            console.log('Test function called - JavaScript is working!');
+            alert('JavaScript is working!');
+        }
+        
+        // Add event listeners as backup
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded');
+            
+            // Test if buttons exist
+            const buttons = document.querySelectorAll('.btn-small');
+            console.log('Found', buttons.length, 'poem type buttons');
+            
+            buttons.forEach((button, index) => {
+                console.log(`Button ${index}:`, button.textContent);
+            });
+        });
+    </script>
+</body>
+</html>
