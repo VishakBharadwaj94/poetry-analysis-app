@@ -9,7 +9,9 @@ GEMINI_API_KEY = "AIzaSyDnjSxh7OQpNX21g7AJ6wzo8UcguKz0Ja8"
 GEMINI_API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={GEMINI_API_KEY}"
 
 def call_gemini_api(prompt, max_tokens=2000):
-    """Make a request to Gemini API"""
+    """Make a request to Gemini API with retry logic"""
+    import time
+    
     headers = {
         "Content-Type": "application/json",
     }
@@ -32,13 +34,49 @@ def call_gemini_api(prompt, max_tokens=2000):
         }
     }
     
-    try:
-        response = requests.post(GEMINI_API_URL, headers=headers, json=data)
-        response.raise_for_status()
-        result = response.json()
-        return result["candidates"][0]["content"]["parts"][0]["text"]
-    except Exception as e:
-        return f"Error calling Gemini API: {str(e)}"
+    # Try multiple times with different models if needed
+    models_to_try = [
+        "gemini-1.5-pro",
+        "gemini-1.5-flash",
+        "gemini-1.5-flash-latest"
+    ]
+    
+    for model in models_to_try:
+        api_url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY}"
+        
+        for attempt in range(3):  # Try 3 times per model
+            try:
+                print(f"Trying {model}, attempt {attempt + 1}")
+                response = requests.post(api_url, headers=headers, json=data, timeout=30)
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    return result["candidates"][0]["content"]["parts"][0]["text"]
+                elif response.status_code == 429:
+                    error_data = response.json()
+                    retry_delay = "unknown"
+                    if "error" in error_data and "details" in error_data["error"]:
+                        for detail in error_data["error"]["details"]:
+                            if detail.get("@type") == "type.googleapis.com/google.rpc.RetryInfo":
+                                retry_delay = detail.get("retryDelay", "unknown")
+                    return f"API quota exceeded for {model}. Try again in {retry_delay}. Daily quota resets at midnight PST."
+                elif response.status_code == 503:
+                    print(f"503 error with {model}, trying next...")
+                    time.sleep(2)  # Wait 2 seconds before retry
+                    continue
+                else:
+                    print(f"Error {response.status_code} with {model}: {response.text}")
+                    continue
+                    
+            except requests.exceptions.Timeout:
+                print(f"Timeout with {model}, attempt {attempt + 1}")
+                time.sleep(1)
+                continue
+            except Exception as e:
+                print(f"Exception with {model}: {str(e)}")
+                continue
+    
+    return "Error: All Gemini models are currently unavailable. Please try again later."
 
 def generate_example_poem(poem_type):
     """Generate an example poem of a specific type"""
@@ -183,4 +221,4 @@ def generate_example():
         return jsonify({"success": False, "error": str(e)})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=8000, debug=True)
