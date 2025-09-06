@@ -1,11 +1,15 @@
+
 from flask import Flask, render_template, request, jsonify
 import requests
 import json
+import os
+from dotenv import load_dotenv
 
 app = Flask(__name__)
 
 # Gemini Flash API configuration
-GEMINI_API_KEY = "AIzaSyDnjSxh7OQpNX21g7AJ6wzo8UcguKz0Ja8"
+load_dotenv()
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 GEMINI_API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
 
 def call_gemini_flash(prompt):
